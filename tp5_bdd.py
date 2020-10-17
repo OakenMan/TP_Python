@@ -25,17 +25,20 @@ def create_tables():
               "population INTEGER, "
               "primary key(code_dpt, code_commune))")
 
+
 # Remplit la BDD à partir des données récupérées dans les fichiers CSV
 def insert_lines():
     # Liste des régions
-    with open('/home/tom/Téléchargements/TP Python/data/regions.csv', 'r', encoding='iso-8859-1') as region_file:   # On ouvre le fichier en lecture, en précisant l'encodage
+    with open('/home/tom/Téléchargements/TP Python/data/regions.csv', 'r',
+              encoding='iso-8859-1') as region_file:  # On ouvre le fichier en lecture, en précisant l'encodage
         lines = region_file.readlines()
-        lines = lines[8:]                   # On supprime les 8 premières lignes (entêtes du document)
+        lines = lines[8:]  # On supprime les 8 premières lignes (entêtes du document)
         for line in lines:
-            infos = line.split(';')                                 # On sépare la ligne avec les ;
-            c.execute("REPLACE INTO region(code_region, nom) "      # On "replace" (= ajout ou update si clé primaire déjà présente) la région
-                      "VALUES (?, ?)",
-                      (infos[0], infos[1]))
+            infos = line.split(';')  # On sépare la ligne avec les ;
+            c.execute(
+                "REPLACE INTO region(code_region, nom) "  # On "replace" (= ajout ou update si clé primaire déjà présente) la région
+                "VALUES (?, ?)",
+                (infos[0], infos[1]))
 
     # Liste des départements
     with open('/home/tom/Téléchargements/TP Python/data/departements.csv', 'r', encoding='iso-8859-1') as dpt_file:
@@ -55,31 +58,37 @@ def insert_lines():
             infos = line.split(';')
             c.execute("REPLACE INTO commune(code_dpt, code_commune, nom, population) "
                       "VALUES (?, ?, ?, ?)",
-                      (infos[2], infos[5], infos[6], int(infos[9].replace(' ', ''))))  # On supprime les espace dans les nombres pour pouvoir bien les parser
+                      (infos[2], infos[5], infos[6], int(infos[9].replace(' ',
+                                                                          ''))))  # On supprime les espace dans les nombres pour pouvoir bien les parser
+
 
 # Calcule les populations de chaque département et région, puis met à jour la BDD
 def update_population():
     # Départements
-    c.execute("SELECT code_dpt FROM departement")   # On récupère tous les code départements
-    for code_dpt in c.fetchall():                   # Pour chaque code
+    c.execute("SELECT code_dpt FROM departement")  # On récupère tous les code départements
+    for code_dpt in c.fetchall():  # Pour chaque code
         population = 0
-        c.execute("SELECT population FROM commune WHERE code_dpt LIKE '"+code_dpt[0]+"'")   # On récupère toutes les populations de communes dans ce département
-        for pop_commune in c.fetchall():                                                    # On ajoute chaque population à "population" (celle du département)
-            population += pop_commune[0]                                                    # [!] On fait pop_commune[0] car même si on sélectionne que un critère la requête renvoie quand même un tableau
-        c.execute("UPDATE departement "                                                     # On met à jour le département (j'ai du faire une requête "moche" parce que ça marchait pas avec les '?'
-                  "SET population = "+str(population)+" "
-                  "WHERE code_dpt LIKE '"+code_dpt[0]+"'")
+        c.execute("SELECT population FROM commune WHERE code_dpt LIKE '" + code_dpt[
+            0] + "'")  # On récupère toutes les populations de communes dans ce département
+        for pop_commune in c.fetchall():  # On ajoute chaque population à "population" (celle du département)
+            population += pop_commune[
+                0]  # [!] On fait pop_commune[0] car même si on sélectionne que un critère la requête renvoie quand même un tableau
+        c.execute(
+            "UPDATE departement "  # On met à jour le département (j'ai du faire une requête "moche" parce que ça marchait pas avec les '?'
+            "SET population = " + str(population) + " "
+                                                    "WHERE code_dpt LIKE '" + code_dpt[0] + "'")
 
     # Régions
     c.execute("SELECT code_region FROM region")
     for code_region in c.fetchall():
         population = 0
-        c.execute("SELECT population FROM departement WHERE code_region == "+str(code_region[0]))
+        c.execute("SELECT population FROM departement WHERE code_region == " + str(code_region[0]))
         for pop_dpt in c.fetchall():
             population += pop_dpt[0]
         c.execute("UPDATE region "
-                  "SET population = "+str(population)+" "
-                  "WHERE code_region =="+str(code_region[0]))
+                  "SET population = " + str(population) + " "
+                                                          "WHERE code_region ==" + str(code_region[0]))
+
 
 # Affiche toutes les communes ayant le même nom, et la liste de tous les départements où elles sont présentes
 def get_duplicates_communes():
@@ -87,27 +96,29 @@ def get_duplicates_communes():
     c.execute("SELECT DISTINCT nom FROM commune")
     for nom in c.fetchall():
         # On cherche tous les départements où une commune porte le même nom
-        c.execute("SELECT code_dpt FROM commune WHERE nom LIKE '"+nom[0].replace("'", "''")+"'")
+        c.execute("SELECT code_dpt FROM commune WHERE nom LIKE '" + nom[0].replace("'", "''") + "'")
         results = c.fetchall()
         # Si le résultat est > 1, on print le nom de la commune avec la liste des départements
         if len(results) > 1:
-            liste_dpt = [item for t in results for item in t]   # (formule magique pour transformer une liste de tuples en liste normale)
+            liste_dpt = [item for t in results for item in
+                         t]  # (formule magique pour transformer une liste de tuples en liste normale)
             print(f'{nom[0]} : {liste_dpt}')
+
 
 # Sauvegarde la BDD dans un fichier XML
 def save_xml():
-    data = ET.Element("database")                       # data = élément racine du XML
+    data = ET.Element("database")  # data = élément racine du XML
 
     regions = ET.SubElement(data, "regions")
     departements = ET.SubElement(data, "départements")  # regions, departements et communes = sous-éléments de data
     communes = ET.SubElement(data, "communes")
 
     # Ajout des régions
-    c.execute("SELECT * FROM region")                   # On récupère toutes les régions
+    c.execute("SELECT * FROM region")  # On récupère toutes les régions
     rows = c.fetchall()
-    for row in rows:                                    # Pour chaque région
-        region = ET.SubElement(regions, "region")       # On créé un sous-élément de 'regions' qu'on nomme 'region'
-        region.set("code_region", str(row[0]))          # Et on lui applique des paramètres sous la forme de "clé : valeurs"
+    for row in rows:  # Pour chaque région
+        region = ET.SubElement(regions, "region")  # On créé un sous-élément de 'regions' qu'on nomme 'region'
+        region.set("code_region", str(row[0]))  # Et on lui applique des paramètres sous la forme de "clé : valeurs"
         region.set("nom", row[1])
         region.set("population", str(row[2]))
 
@@ -141,6 +152,7 @@ def save_xml():
     with open("database.xml", 'w') as f:
         f.write(pretty_xml)
 
+
 # Charge un fichier XML pour mettre à jour la BDD
 def load_xml():
     # On récupère le fichier XML
@@ -150,9 +162,9 @@ def load_xml():
     data = tree.getroot()
 
     # Ajout des régions
-    regions = data[0]           # On récupère l'éléments 'regions'
-    for region in regions:      # Pour chaque sous-élément de 'regions'
-        infos = region.attrib   # On récupère ses attributs (ensembles clé-valeurs)
+    regions = data[0]  # On récupère l'éléments 'regions'
+    for region in regions:  # Pour chaque sous-élément de 'regions'
+        infos = region.attrib  # On récupère ses attributs (ensembles clé-valeurs)
         c.execute("REPLACE INTO region(code_region, nom, population) "  # Et on ajoute ça à la BDD
                   "VALUES (?, ?, ?)",
                   (infos["code_region"], infos["nom"], infos["population"]))
@@ -174,18 +186,75 @@ def load_xml():
                   (infos["code_dpt"], infos["code_commune"], infos["nom"], infos["population"]))
 
 
-#-------------- MAIN ---------------#
+# Change la structure de la BDD pour intégrer les nouvelles régions
+def add_new_regions():
+    # Créé la table "nouvellesregions"
+    c.execute("CREATE TABLE IF NOT EXISTS nouvellesregions "
+              "(code_region INTEGER PRIMARY KEY, "
+              "nom TEXT, "
+              "population INTEGER)")
+
+    # On remplit la table "nouvellesregions"
+    with open('/home/tom/Téléchargements/TP Python/data/zones-2016.csv', 'r', encoding='iso-8859-1') as region_file:
+        lines = region_file.readlines()
+        lines = lines[-18:]  # On garde juste les 18 dernières lignes (les régions)
+        for line in lines:
+            infos = line.split(';')
+            c.execute(
+                "REPLACE INTO nouvellesregions(code_region, nom) "
+                "VALUES (?, ?)",
+                (infos[1], infos[2]))
+
+    # Ajout un champ "code_nouvelle_region" à la table "departement"
+    # [!] SQLite ne supporte pas la clause "IF NOT EXISTS" pour la fonction ALTER TABLE,
+    # [!] c'est pourquoi on utilise les exceptions pour gérer le cas où la colonne existerait déjà
+    try:
+        c.execute("ALTER TABLE departement "
+                  "ADD code_nouvelle_region INTEGER")
+    except sqlite3.OperationalError:
+        pass
+
+    # On met à jour le champ "code_nouvelle_region" pour les départements
+    with open("/home/tom/Téléchargements/TP Python/data/communes-2016.csv", 'r', encoding='iso-8859-1') as communes_file:
+        lines = communes_file.readlines()
+        lines = lines[7:]
+        updated_dpt = []    # Liste des départements mis à jour
+        for line in lines:
+            infos = line.split(';')
+            # Si le département n'a pas déjà été mis à jour
+            if not infos[2] in updated_dpt:
+                c.execute("UPDATE departement "
+                          "SET code_nouvelle_region = " + str(infos[3]) + " "
+                          "WHERE code_dpt LIKE '" + infos[2] + "'")
+                updated_dpt.append(infos[2])                          # On met à jour la liste des départements mis à jour
+
+    # On calcule la population des nouvelles régions avec la population des communes
+    c.execute("SELECT code_region FROM nouvellesregions")
+    for code_region in c.fetchall():                            # Pour chaque code_region
+        population = 0
+        c.execute("SELECT commune.population FROM commune, departement "                # On récupère les populations de toutes les communes
+                  "WHERE commune.code_dpt == departement.code_dpt "                     # dans les départements de la région "code_region"
+                  "AND departement.code_nouvelle_region == " + str(code_region[0]))
+        for pop_commune in c.fetchall():
+            population += pop_commune[0]
+        c.execute("UPDATE nouvellesregions "                            # Puis on met à jour la population de la nouvelle région
+                  "SET population = " + str(population) + " "
+                  "WHERE code_region ==" + str(code_region[0]))
+
+# -------------- MAIN ---------------#
 conn = sqlite3.connect('database.db', timeout=5)
 c = conn.cursor()
 
-#create_tables()
-#insert_lines()
+# create_tables()
+# insert_lines()
 
-#update_population()
-#get_duplicates_communes()
+# update_population()
+# get_duplicates_communes()
 
-#save_xml()
-load_xml()
+# save_xml()
+# load_xml()
+
+# add_new_regions()
 
 conn.commit()
 conn.close()
