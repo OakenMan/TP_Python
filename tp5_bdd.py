@@ -58,36 +58,24 @@ def insert_lines():
             infos = line.split(';')
             c.execute("REPLACE INTO commune(code_dpt, code_commune, nom, population) "
                       "VALUES (?, ?, ?, ?)",
-                      (infos[2], infos[5], infos[6], int(infos[9].replace(' ',
-                                                                          ''))))  # On supprime les espace dans les nombres pour pouvoir bien les parser
+                      (infos[2], infos[5], infos[6], int(infos[9].replace(' ', ''))))  # On supprime les espace dans les nombres pour pouvoir bien les parser
 
 
 # Calcule les populations de chaque département et région, puis met à jour la BDD
 def update_population():
     # Départements
-    c.execute("SELECT code_dpt FROM departement")  # On récupère tous les code départements
-    for code_dpt in c.fetchall():  # Pour chaque code
-        population = 0
-        c.execute("SELECT population FROM commune WHERE code_dpt LIKE '" + code_dpt[
-            0] + "'")  # On récupère toutes les populations de communes dans ce département
-        for pop_commune in c.fetchall():  # On ajoute chaque population à "population" (celle du département)
-            population += pop_commune[
-                0]  # [!] On fait pop_commune[0] car même si on sélectionne que un critère la requête renvoie quand même un tableau
-        c.execute(
-            "UPDATE departement "  # On met à jour le département (j'ai du faire une requête "moche" parce que ça marchait pas avec les '?'
-            "SET population = " + str(population) + " "
-                                                    "WHERE code_dpt LIKE '" + code_dpt[0] + "'")
+    c.execute("SELECT code_dpt, SUM(population) FROM commune GROUP BY code_dpt")
+    for infos in c.fetchall():  # infos = [code_dpt, SUM(population)]
+        c.execute("UPDATE departement "
+                  "SET population = " + str(infos[1]) + " "
+                  "WHERE code_dpt LIKE '" + infos[0] + "'")
 
     # Régions
-    c.execute("SELECT code_region FROM region")
-    for code_region in c.fetchall():
-        population = 0
-        c.execute("SELECT population FROM departement WHERE code_region == " + str(code_region[0]))
-        for pop_dpt in c.fetchall():
-            population += pop_dpt[0]
+    c.execute("SELECT code_region, SUM(population) FROM departement GROUP BY code_region")
+    for infos in c.fetchall():  # infos = [code_region, SUM(population)]
         c.execute("UPDATE region "
-                  "SET population = " + str(population) + " "
-                                                          "WHERE code_region ==" + str(code_region[0]))
+                  "SET population = " + str(infos[1]) + " "
+                  "WHERE code_region == " + str(infos[0]))
 
 
 # Affiche toutes les communes ayant le même nom, et la liste de tous les départements où elles sont présentes
@@ -95,13 +83,12 @@ def get_duplicates_communes():
     # Pour chaque nom de commune (sans les duplicatas)
     c.execute("SELECT DISTINCT nom FROM commune")
     for nom in c.fetchall():
-        # On cherche tous les départements où une commune porte le même nom
+        # On cherche tous les départements où une commune porte le même nom (sans oublier de doubler les apostrophes dans les noms de communes)
         c.execute("SELECT code_dpt FROM commune WHERE nom LIKE '" + nom[0].replace("'", "''") + "'")
         results = c.fetchall()
         # Si le résultat est > 1, on print le nom de la commune avec la liste des départements
         if len(results) > 1:
-            liste_dpt = [item for t in results for item in
-                         t]  # (formule magique pour transformer une liste de tuples en liste normale)
+            liste_dpt = [item for t in results for item in t]  # (formule magique pour transformer une liste de tuples en liste normale)
             print(f'{nom[0]} : {liste_dpt}')
 
 
@@ -218,7 +205,7 @@ def add_new_regions():
     with open("/home/tom/Téléchargements/TP Python/data/communes-2016.csv", 'r', encoding='iso-8859-1') as communes_file:
         lines = communes_file.readlines()
         lines = lines[7:]
-        updated_dpt = []    # Liste des départements mis à jour
+        updated_dpt = []  # Liste des départements mis à jour
         for line in lines:
             infos = line.split(';')
             # Si le département n'a pas déjà été mis à jour
@@ -226,20 +213,22 @@ def add_new_regions():
                 c.execute("UPDATE departement "
                           "SET code_nouvelle_region = " + str(infos[3]) + " "
                           "WHERE code_dpt LIKE '" + infos[2] + "'")
-                updated_dpt.append(infos[2])                          # On met à jour la liste des départements mis à jour
+                updated_dpt.append(infos[2])  # On met à jour la liste des départements mis à jour
 
     # On calcule la population des nouvelles régions avec la population des communes
     c.execute("SELECT code_region FROM nouvellesregions")
-    for code_region in c.fetchall():                            # Pour chaque code_region
+    for code_region in c.fetchall():  # Pour chaque code_region
         population = 0
-        c.execute("SELECT commune.population FROM commune, departement "                # On récupère les populations de toutes les communes
-                  "WHERE commune.code_dpt == departement.code_dpt "                     # dans les départements de la région "code_region"
-                  "AND departement.code_nouvelle_region == " + str(code_region[0]))
+        c.execute(
+            "SELECT commune.population FROM commune, departement "  # On récupère les populations de toutes les communes
+            "WHERE commune.code_dpt == departement.code_dpt "  # dans les départements de la région "code_region"
+            "AND departement.code_nouvelle_region == " + str(code_region[0]))
         for pop_commune in c.fetchall():
             population += pop_commune[0]
-        c.execute("UPDATE nouvellesregions "                            # Puis on met à jour la population de la nouvelle région
+        c.execute("UPDATE nouvellesregions "  # Puis on met à jour la population de la nouvelle région
                   "SET population = " + str(population) + " "
                   "WHERE code_region ==" + str(code_region[0]))
+
 
 # -------------- MAIN ---------------#
 conn = sqlite3.connect('database.db', timeout=5)
