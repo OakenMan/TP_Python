@@ -2,7 +2,8 @@ import numpy as np
 from scipy.optimize import curve_fit
 from scipy import ndimage
 from scipy import linalg
-import cv2
+from skimage import io
+from skimage.transform import resize
 import matplotlib.pyplot as plt
 
 # ---------- NUMPY ----------
@@ -20,26 +21,26 @@ print(arr)  # affiche le contenu du tableau
 # arange et reshape
 A = np.arange(0, 9).reshape(3, 3)
 B = np.arange(2, 11).reshape(3, 3)
-print(f'A = {A}')
-print(f'B = {B}')
+print(f'A = \n{A}')
+print(f'B = \n{B}')
 
 # Produit scalaire et matriciel
 product = A * B
 dotproduct = np.dot(A, B)
-print(f'A * B = {product}')
-print(f'A . B = {dotproduct}')
+print(f'A * B = \n{product}')
+print(f'A . B = \n{dotproduct}')
 
 # Transposée
 transposed = A.transpose()
-print(f'A^T = {transposed}')
+print(f'A^T = \n{transposed}')
 
 # Déterminant
 det = np.linalg.det(A)
-print(f'det(A) = {det}')
+print(f'det(A) = \n{det}')
 
 # Inverse
 inv = np.linalg.inv(product)
-print(f'inv(A) = {inv}')
+print(f'inv(A) = \n{inv}')
 
 # Résolution de système linéaire
 a = np.array([[2, 3, 3, 1],
@@ -48,7 +49,7 @@ a = np.array([[2, 3, 3, 1],
               [-2, -1, 1, 1]])
 b = np.array([15, 3, 5, 1])
 x = np.linalg.solve(a, b)
-print(f'x = {x}')
+print(f'x = \n{x}')
 
 # Valeurs et vecteurs propres
 val_propres = np.linalg.eig(A)[0]
@@ -74,7 +75,7 @@ y_noise = y + noise
 # (ici même avec les valeurs par défaut (1 partout), curve_fit converge quand même
 init_vals = [1, 1, 1]
 opti_vals, covar = curve_fit(func, x, y_noise, p0=init_vals)
-print(f'Best paramas = {opti_vals}')
+print(f'Best params = {opti_vals}')
 y_fit = func(x, opti_vals[0], opti_vals[1], opti_vals[2])
 
 # On plot les 3 courbes
@@ -88,11 +89,11 @@ plt.show()
 
 # ---------- Lecture/Manipulation d'images ----------
 # (pas besoin de Scipy pour juste ouvrir et redimensionner une image)
-img = cv2.imread("image.jpg")
+img = io.imread("image.jpg")
 plt.imshow(img)
 plt.show()
 
-resized = cv2.resize(img, dsize=(100, 100))
+resized = resize(img, (100, 100))
 plt.imshow(resized)
 plt.show()
 
@@ -117,7 +118,7 @@ plt.imshow(blurred)
 plt.show()
 
 # Détection des bords
-shapes = cv2.imread("shapes.png")
+shapes = io.imread("shapes.png")
 sx = ndimage.sobel(shapes, axis=0, mode='constant')
 sy = ndimage.sobel(shapes, axis=1, mode='constant')
 edges = sx + sy
