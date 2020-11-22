@@ -6,9 +6,7 @@ import random
 
 # 1. Générer des nombres aléatoires
 random.seed()
-list = []
-for i in range(100):
-    list.append(random.randint(0, 9))
+list = [random.randint(0, 9) for i in range(100)]
 
 print(list)
 

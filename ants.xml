@@ -1,0 +1,108 @@
+<?xml version="1.0" ?>
+<database>
+    <canvas height="500" width="500"/>
+    <ants>
+        <ant mouv_type="0" prob_suiv="0.8">
+            <color>
+                <cr>5</cr>
+                <cg>211</cg>
+                <cb>149</cb>
+            </color>
+           <love>
+                <sr>255</sr>
+                <sg>12</sg>
+                <sb>0</sb>
+           </love>
+           <prob_mouv>
+                <pg>0.8</pg>
+                <pt>0.1</pt>
+                <pd>0.1</pd>
+           </prob_mouv>
+        </ant>
+        <ant mouv_type="1" prob_suiv="0.8">
+            <color>
+                <cr>145</cr>
+                <cg>11</cg>
+                <cb>149</cb>
+            </color>
+           <love>
+                <sr>255</sr>
+                <sg>12</sg>
+                <sb>0</sb>
+           </love>
+           <prob_mouv>
+                <pg>0.8</pg>
+                <pt>0.1</pt>
+                <pd>0.1</pd>
+           </prob_mouv>
+        </ant>
+        <ant mouv_type="0" prob_suiv="0.75">
+            <color>
+                <cr>255</cr>
+                <cg>204</cg>
+                <cb>0</cb>
+            </color>
+           <love>
+                <sr>255</sr>
+                <sg>255</sg>
+                <sb>0</sb>
+           </love>
+           <prob_mouv>
+                <pg>0.01</pg>
+                <pt>0.98</pt>
+                <pd>0.01</pd>
+           </prob_mouv>
+        </ant>
+        <ant mouv_type="0" prob_suiv="0.75">
+            <color>
+                <cr>255</cr>
+                <cg>255</cg>
+                <cb>0</cb>
+            </color>
+           <love>
+                <sr>255</sr>
+                <sg>204</sg>
+                <sb>0</sb>
+           </love>
+           <prob_mouv>
+                <pg>0.01</pg>
+                <pt>0.98</pt>
+                <pd>0.01</pd>
+           </prob_mouv>
+        </ant>
+        <ant mouv_type="1" prob_suiv="0.75">
+            <color>
+                <cr>255</cr>
+                <cg>153</cg>
+                <cb>0</cb>
+            </color>
+           <love>
+                <sr>255</sr>
+                <sg>204</sg>
+                <sb>0</sb>
+           </love>
+           <prob_mouv>
+                <pg>0.01</pg>
+                <pt>0.98</pt>
+                <pd>0.01</pd>
+           </prob_mouv>
+        </ant>
+        <ant mouv_type="0" prob_suiv="1.0">
+            <color>
+                <cr>255</cr>
+                <cg>51</cg>
+                <cb>0</cb>
+            </color>
+           <love>
+                <sr>255</sr>
+                <sg>255</sg>
+                <sb>0</sb>
+           </love>
+           <prob_mouv>
+                <pg>0.01</pg>
+                <pt>0.98</pt>
+                <pd>0.01</pd>
+           </prob_mouv>
+        </ant>
+   </ants>
+</database>

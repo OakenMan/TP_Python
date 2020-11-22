@@ -51,13 +51,13 @@ class Student:
 
     # Surcharge de l'opérateur "str()"
     def __str__(self):
-        return self.firstname + " " + self.lastname + " - " + str(self.birth) + self.mail
+        return self.firstname + " " + self.lastname + " - " + str(self.birth) + self.mail + "\n"
 
 
 students = []
 
 try:
-    file = open("/home/tom/Téléchargements/Python/fichetu.csv", "r")
+    file = open("/home/tom/Téléchargements/TP Python/fichetu.csv", "r")
 except:
     print("Erreur : le fichier n'existe pas")
     exit()
@@ -69,6 +69,7 @@ for line in lines:
     student = Student(array[0], array[1], Date(date[0], date[1], date[2]))
     students.append(student)
 
-print("List of students :")
+print("Liste d'étudiants :")
 for student in students:
     print(student)
+
