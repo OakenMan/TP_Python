@@ -4,7 +4,7 @@ import warnings
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
 from keras.models import Sequential
-from keras.layers import Conv1D, Dropout, MaxPooling1D, Flatten, Dense, LSTM
+from keras.layers import Embedding, LSTM, Dense
 from keras.utils import to_categorical
 from keras.callbacks import EarlyStopping
 
@@ -37,8 +37,8 @@ def prepare_data(path, start, end, last_mn=120):
     return X, Y
 
 def load_dataset():
-    trainX, trainY = prepare_data("/home/tom/Téléchargements/TP Python/ForexData/data_2019.csv", 0, 100000)
-    testX, testY = prepare_data("/home/tom/Téléchargements/TP Python/ForexData/data_2019.csv", 100000, 150000)
+    trainX, trainY = prepare_data("/home/tom/Téléchargements/TP Python/ForexData/data_2019.csv", 0, 10000)
+    testX, testY = prepare_data("/home/tom/Téléchargements/TP Python/ForexData/data_2019.csv", 10000, 15000)
 
     print(f'nb augmentation : {np.count_nonzero(trainY == 1)}')
     print(f'nb diminutions : {np.count_nonzero(trainY == 0)}')
@@ -51,30 +51,15 @@ def load_dataset():
 
     return trainX, trainY, testX, testY
 
-def buildCNN(timesteps, features, outputs):
+def buildLSTM():
     model = Sequential()
 
-    model.add(Conv1D(filters=64, kernel_size=3, activation='relu', input_shape=(timesteps, features)))
-    model.add(Conv1D(filters=64, kernel_size=3, activation='relu'))
-    model.add(Dropout(0.5))
-    model.add(MaxPooling1D(pool_size=2))
-    model.add(Flatten())
-    model.add(Dense(100, activation='relu'))
+    model.add(LSTM(4, input_shape=(120, 4), dropout=0.5))
     model.add(Dense(outputs, activation='softmax'))
 
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
     return model
-
-def buildLSTM(timesteps, features, outputs):
-    model = Sequential()
-
-    model.add(LSTM(4, input_shape=(timesteps, features), dropout=0.5))
-    model.add(Dense(outputs, activation='softmax'))
-    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-
-    return model
-
 # ---------------------------------------
 trainX, trainY, testX, testY = load_dataset()
 
@@ -86,12 +71,12 @@ print(f'timesteps = {timesteps}')
 print(f'features = {features}')
 print(f'outputs = {outputs}')
 
-model = buildCNN(timesteps, features, outputs)
+model = buildLSTM()
 model.summary()
 
 early = EarlyStopping(monitor='accuracy', min_delta=0, patience=3, verbose=1, mode='auto')
 
-model.fit(trainX, trainY, epochs=10, verbose=1, callbacks=[early])
+model.fit(trainX, trainY, epochs=10, batch_size=1, verbose=1, callbacks=[early])
 print("[!] Training done!")
 
 _, accuracy = model.evaluate(testX, testY, verbose=1)
